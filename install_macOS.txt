@@ -1,0 +1,7 @@
+Need to install:
+ - gcc (I used gcc11)
+ - openmpi
+ - openmpi-default
+ - netcdf
+ - netcdf-fortran 
+ - netcdf-cxx
