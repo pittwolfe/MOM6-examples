@@ -1,7 +1,26 @@
 Need to install:
- - gcc (I used gcc11)
+ - gcc (gcc11 seems to have problems so go for gcc10)
  - openmpi
  - openmpi-default
  - netcdf
  - netcdf-fortran 
  - netcdf-cxx
+ 
+Check out MOM6 from my GitHub repo:
+    git clone -b gyre_moc git@github.com:pittwolfe/MOM6-examples.git
+    
+Initialize the submodules:
+    cd MOM6-examples
+    git submodule init
+    git submodule update --recursive
+
+Create a blank env file:
+    mkdir -p build/gnu
+    touch build/gnu/env
+    
+Compile FMS using the compile_fms.sh script:
+    ./compile_fms.sh
+    
+Compile MOM6 using the compile_ocean_only.sh script:
+    ./compile_ocean_only.sh
+    

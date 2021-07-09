@@ -153,7 +153,7 @@ LIBS =
 # NetCDF library flags
 LIBS += $(shell nf-config --flibs)
 # MPICH MPI library flags
-LIBS += "-L/opt/local/lib/openmpi-mp -L/opt/local/lib -lmpi"
+LIBS += "-L/opt/local/lib/openmpi-gcc10 -L/opt/local/lib -lmpi"
 
 # Get compile flags based on target macros.
 ifdef REPRO
