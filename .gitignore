@@ -31,3 +31,6 @@ seaice.stats.*
 *.ignore
 # Ignore lcov files
 lcov.*
+
+*.all
+*.short
