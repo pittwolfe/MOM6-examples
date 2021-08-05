@@ -13,7 +13,7 @@ REENTRANT_X = False             !   [Boolean] default = True
 NIGLOBAL = 60                   !
                                 ! The total number of thickness grid points in the x-direction in the physical
                                 ! domain. With STATIC_MEMORY_ this is set in MOM_memory.h at compile time.
-NJGLOBAL = 100                  !
+NJGLOBAL = 81                   !
                                 ! The total number of thickness grid points in the y-direction in the physical
                                 ! domain. With STATIC_MEMORY_ this is set in MOM_memory.h at compile time.
 ! LAYOUT = 2, 4                 !
@@ -57,10 +57,19 @@ GRID_CONFIG = "mercator"       !
                                 !     mercator - use a Mercator spherical grid.
 SOUTHLAT = 10.0                 !   [degrees]
                                 ! The southern latitude of the domain.
-LENLAT = 50.0                   !   [degrees]
+LENLAT = 35.0                   !   [degrees]
                                 ! The latitudinal length of the domain.
 LENLON = 30.0                   !   [degrees]
                                 ! The longitudinal length of the domain.
+ISOTROPIC = True                !   [Boolean] default = False
+                                ! If true, an isotropic grid on a sphere (also known as a Mercator grid) is
+                                ! used. With an isotropic grid, the meridional extent of the domain (LENLAT),
+                                ! the zonal extent (LENLON), and the number of grid points in each direction are
+                                ! _not_ independent. In MOM the meridional extent is determined to fit the zonal
+                                ! extent and the number of grid points, while grid is perfectly isotropic.
+EQUATOR_REFERENCE = False       !   [Boolean] default = True
+                                ! If true, the grid is defined to have the equator at the nearest q- or h- grid
+                                ! point to (-LOWLAT*NJGLOBAL/LENLAT).
 TOPO_CONFIG = "file"            !
                                 ! This specifies how bathymetry is specified:
                                 !     file - read bathymetric information from the file
@@ -286,7 +295,7 @@ WIND_FILE = "forcing.nc"
 DT_FORCING = 2400.0             !   [s] default = 1200.0
                                 ! The time step for changing forcing, coupling with other components, or
                                 ! potentially writing certain diagnostics. The default value is given by DT.
-DAYMAX = 100.0                  !   [days]
+DAYMAX = 36000.0                !   [days]
                                 ! The final time of the whole simulation, in units of TIMEUNIT seconds.  This
                                 ! also sets the potential end time of the present run segment if the end time is
                                 ! not set via ocean_solo_nml in input.nml.
@@ -295,6 +304,6 @@ RESTART_CONTROL = 3             ! default = 1
                                 ! for a time-stamped file, and odd (bit 0) for a non-time-stamped file. A
                                 ! non-time-stamped restart file is saved at the end of the run segment for any
                                 ! non-negative value.
-RESTINT = 110.0                 !   [days] default = 0.0
+RESTINT = 360.0                 !   [days] default = 0.0
                                 ! The interval between saves of the restart file in units of TIMEUNIT.  Use 0
                                 ! (the default) to not save incremental restart files at all.

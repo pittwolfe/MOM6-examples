@@ -1,14 +1,14 @@
 "MOM Experiment"
 1 1 1 0 0 0
-"prog_%4yr_%3dy",     5,"days",1,"days","Time",365,"days"
-"ave_prog_%4yr_%3dy", 5,"days",1,"days","Time",365,"days"
-"cont_%4yr_%3dy",     5,"days",1,"days","Time",365,"days"
-#"mom_%4yr_%3dy",      5,"days",1,"days","Time",10,"days"
-#"bt_mom_%4yr_%3dy",   5,"days",1,"days","Time",10,"days"
-#"visc_%4yr_%3dy",     5,"days",1,"days","Time",10,"days"
-#"energy_%4yr_%3dy",   5,"days",1,"days","Time",10,"days"
-#"ML_TKE_%4yr_%3dy",   5,"days",1,"days","Time",10,"days"
-"forcing_%4yr_%3dy",  5,"days",1,"days","Time",365,"days"
+"prog_%4yr_%3dy",     30,"days",1,"days","time",1,"years"
+"ave_prog_%4yr_%3dy", 30,"days",1,"days","time",1,"years"
+"cont_%4yr_%3dy",     30,"days",1,"days","time",1,"years"
+#"mom_%4yr_%3dy",      5,"days",1,"days","time",10,"days"
+#"bt_mom_%4yr_%3dy",   5,"days",1,"days","time",10,"days"
+#"visc_%4yr_%3dy",     5,"days",1,"days","time",10,"days"
+#"energy_%4yr_%3dy",   5,"days",1,"days","time",10,"days"
+#"ML_TKE_%4yr_%3dy",   5,"days",1,"days","time",10,"days"
+ "forcing_%4yr_%3dy",  5,"days",1,"days","time",1,"years"
 
 #This is the field section of the diag_table.
 
@@ -138,8 +138,8 @@
 
 # Surface Forcing:
 #=================
-"ocean_model","taux","taux","forcing_%4yr_%3dy","all",.true.,"none",2
-#"ocean_model","tauy","tauy","forcing_%4yr_%3dy","all",.true.,"none",2
+"ocean_model","taux","taux","forcing_%4yr_%3dy","all",.false.,"none",2
+"ocean_model","tauy","tauy","forcing_%4yr_%3dy","all",.false.,"none",2
 #"ocean_model","ustar","ustar","forcing_%4yr_%3dy","all",.true.,"none",2
 #"ocean_model","PRCmE","PRCmE","forcing_%4yr_%3dy","all",.true.,"none",2
 #"ocean_model","SW","SW","forcing_%4yr_%3dy","all",.true.,"none",2
