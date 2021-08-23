@@ -1,14 +1,14 @@
 "MOM Experiment"
 1 1 1 0 0 0
-"prog_%4yr_%3dy",     30,"days",1,"days","time",1,"years"
-"ave_prog_%4yr_%3dy", 30,"days",1,"days","time",1,"years"
-"cont_%4yr_%3dy",     30,"days",1,"days","time",1,"years"
+"prog_%4yr_%3dy",     30,"days",1,"days","time",10,"years"
+"ave_prog_%4yr_%3dy", 30,"days",1,"days","time",10,"years"
+"cont_%4yr_%3dy",     30,"days",1,"days","time",10,"years"
 #"mom_%4yr_%3dy",      5,"days",1,"days","time",10,"days"
 #"bt_mom_%4yr_%3dy",   5,"days",1,"days","time",10,"days"
 #"visc_%4yr_%3dy",     5,"days",1,"days","time",10,"days"
 #"energy_%4yr_%3dy",   5,"days",1,"days","time",10,"days"
 #"ML_TKE_%4yr_%3dy",   5,"days",1,"days","time",10,"days"
- "forcing_%4yr_%3dy",  5,"days",1,"days","time",1,"years"
+ "forcing_%4yr_%3dy",  5,"days",1,"days","time",10,"years"
 
 #This is the field section of the diag_table.
 

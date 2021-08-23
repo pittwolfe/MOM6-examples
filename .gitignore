@@ -36,3 +36,6 @@ lcov.*
 *.short
 ocean_only/gyre_moc/flat/output.txt
 .DS_Store
+*.pdf
+*.png
+*.res

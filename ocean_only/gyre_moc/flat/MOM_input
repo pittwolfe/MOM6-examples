@@ -131,9 +131,9 @@ COORD_CONFIG = "gprime"         ! default = "none"
                                 !     ts_profile - use temperature and salinity profiles
                                 !       (read from COORD_FILE) to set layer densities.
                                 !     USER - call a user modified routine.
-GFS = 9.8                      !   [m s-2] default = 9.8
+GFS = 9.8                       !   [m s-2] default = 9.8
                                 ! The reduced gravity at the free surface.
-GINT = 0.0306                   !   [m s-2]
+GINT = 0.01                     !   [m s-2]
                                 ! The reduced gravity across internal interfaces.
 
 ! === module MOM_state_initialization ===
