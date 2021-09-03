@@ -37,3 +37,9 @@
 [submodule "src/FMS2"]
 	path = src/FMS2
 	url = https://github.com/NOAA-GFDL/FMS
+[submodule "ocean_only/gyre_moc/python/pittwolfe"]
+	path = ocean_only/gyre_moc/python/pittwolfe
+	url = git@meta:/srv/git/cwolfe/pittwolfe.git
+[submodule "ocean_only/gyre_moc/python/ppi"]
+	path = ocean_only/gyre_moc/python/ppi
+	url = git@meta:/srv/git/cwolfe/ppi.git
