@@ -17,7 +17,7 @@
 
 "ocean_model","u","u","prog_%4yr_%3dy","all",.false.,"none",2
 "ocean_model","v","v","prog_%4yr_%3dy","all",.false.,"none",2
-"ocean_model","h","h","prog_%4yr_%3dy","all",.false.,"none",1
+"ocean_model","h","h","prog_%4yr_%3dy","all",.false.,"none",2
 "ocean_model","e","e","prog_%4yr_%3dy","all",.false.,"none",2
 #"ocean_model","temp","temp","prog_%4yr_%3dy","all",.false.,"none",2
 #"ocean_model","salt","salt","prog_%4yr_%3dy","all",.false.,"none",2
@@ -29,7 +29,7 @@
 
 "ocean_model","u","u","ave_prog_%4yr_%3dy","all",.true.,"none",2
 "ocean_model","v","v","ave_prog_%4yr_%3dy","all",.true.,"none",2
-"ocean_model","h","h","ave_prog_%4yr_%3dy","all",.true.,"none",1
+"ocean_model","h","h","ave_prog_%4yr_%3dy","all",.true.,"none",2
 "ocean_model","e","e","ave_prog_%4yr_%3dy","all",.true.,"none",2
 #"ocean_model","temp","temp","ave_prog_%4yr_%3dy","all",.true.,"none",2
 #"ocean_model","salt","salt","ave_prog_%4yr_%3dy","all",.true.,"none",2
