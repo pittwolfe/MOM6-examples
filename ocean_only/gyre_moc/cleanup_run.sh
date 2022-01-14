@@ -11,3 +11,6 @@ cp -f cont__*.nc OUTPUT
 cp -f ocean.stats.nc OUTPUT
 cp -f ocean_geometry.nc OUTPUT
 cp -f prog__*.nc OUTPUT
+cp -f visc__*.nc OUTPUT
+cp -f forcing__*.nc OUTPUT
+cp -f mom__*.nc OUTPUT
