@@ -2,7 +2,7 @@
 # Tested on macOS Mojave (version 10.14.2), with gnu 8.2 and mpich 3.3
 #
 # Typical use with mkmf
-# mkmf -t macOS-gnu8-mpich3.mk -c"-Duse_libMPI -Duse_netCDF" path_names /usr/local/include
+# mkmf -t macOS-gnu10-openmpi.mk -c"-Duse_libMPI -Duse_netCDF" path_names /usr/local/include
 
 ############
 # Commands Macros
@@ -99,6 +99,7 @@ endif
 # Fortran Compiler flags for the NetCDF library
 FPPFLAGS += $(shell nf-config --fflags)
 # Fortran Compiler flags for the MPICH MPI library
+## -- modify -- Point to local mpi library
 FPPFLAGS += "-I/opt/local/include/openmpi-gcc10"
 
 # Base set of Fortran compiler flags
@@ -122,6 +123,7 @@ CPPFLAGS += $(shell nc-config --cflags)
 # Output the effective list of Cflags from the -I group for all the requested packages
 # there's also an 'openpa.pc' package in the same directory, so this flag must ignore it
 #CPPFLAGS += $(shell pkg-config --cflags-only-I mpich)
+## -- modify -- Point to local mpi library
 CPPFLAGS += "-I/opt/local/include/openmpi-gcc10"
 
 # Base set of C compiler flags
@@ -152,7 +154,8 @@ LDFLAGS_COVERAGE :=
 LIBS =
 # NetCDF library flags
 LIBS += $(shell nf-config --flibs)
-# MPICH MPI library flags
+# MPI library flags
+## -- modify -- Point to local mpi library
 LIBS += "-L/opt/local/lib/openmpi-gcc10 -L/opt/local/lib -lmpi"
 
 # Get compile flags based on target macros.
