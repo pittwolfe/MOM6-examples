@@ -1,5 +1,6 @@
 # Build directory might optionally be placed here
 build*
+!tools/build
 # Ignore .datasets
 .datasets
 # Ignore model output
