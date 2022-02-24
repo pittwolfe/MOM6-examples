@@ -20,6 +20,7 @@ fort.20
 *.nc
 *.nc.*
 RESTART
+INPUT
 ocean.stats
 ocean.stats.*
 seaice.stats
@@ -34,9 +35,13 @@ lcov.*
 
 *.all
 *.short
-ocean_only/gyre_moc/flat/output.txt
+output.txt
+output.1.txt
 .DS_Store
 *.pdf
 *.png
 *.res
+*.debugging
+*.layout
+*.mp4
 MOM6
