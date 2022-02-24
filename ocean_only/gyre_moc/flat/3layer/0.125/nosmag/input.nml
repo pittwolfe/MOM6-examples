@@ -1,6 +1,6 @@
  &MOM_input_nml
          output_directory = 'OUTPUT/',
-         input_filename = 'MOM.res_Y0601_D001_S00000.nc',
+         input_filename = 'MOM.res_Y0701_D001_S00000.nc',
          restart_input_dir = 'RESTART/',
          restart_output_dir = 'RESTART/',
          parameter_filename = 'MOM_input',
@@ -10,4 +10,5 @@
  /
  
  &ocean_solo_nml
-   calendar = 'thirty_day_months' /
+   calendar = 'thirty_day_months',
+   days = 360 /

@@ -4,8 +4,10 @@
 #SBATCH --output=output.txt
 #SBATCH --ntasks-per-node=28
 #SBATCH --nodes=4
-#SBATCH --time=48:00:00
-#SBATCH -p long-28core
+##SBATCH --time=48:00:00
+##SBATCH -p long-28core
+#SBATCH --time=4:00:00
+#SBATCH -p short-28core
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=christopher.wolfe@stonybrook.edu
 
