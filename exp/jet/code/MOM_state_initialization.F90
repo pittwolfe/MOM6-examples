@@ -616,6 +616,7 @@ subroutine MOM_initialize_state(u, v, h, tv, Time, G, GV, US, PF, dirs, &
                  "   DOME - specified inflow on northern boundary\n"//&
                  "   dyed_channel - supercritical with dye on the inflow boundary\n"//&
                  "   dyed_obcs - circle_obcs with dyes on the open boundaries\n"//&
+                 "   jet - upper layer jet forcing on the western boundary\n"//&
                  "   Kelvin - barotropic Kelvin wave forcing on the western boundary\n"//&
                  "   shelfwave - Flather with shelf wave forcing on western boundary\n"//&
                  "   supercritical - now only needed here for the allocations\n"//&
