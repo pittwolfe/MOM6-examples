@@ -78,6 +78,7 @@ use Rossby_front_2d_initialization, only : Rossby_front_initialize_velocity
 use SCM_CVMix_tests, only: SCM_CVMix_tests_TS_init
 use dyed_channel_initialization, only : dyed_channel_set_OBC_tracer_data
 use dyed_obcs_initialization, only : dyed_obcs_set_OBC_data
+use jet_initialization, only : jet_initialize_thickness, jet_initialize_velocity 
 use jet_initialization, only : jet_set_OBC_data
 use supercritical_initialization, only : supercritical_set_OBC_data
 use soliton_initialization, only : soliton_initialize_velocity
@@ -290,6 +291,7 @@ subroutine MOM_initialize_state(u, v, h, tv, Time, G, GV, US, PF, dirs, &
              " \t dumbbell - sloshing channel ICs. \n"//&
              " \t soliton - Equatorial Rossby soliton. \n"//&
              " \t rossby_front - a mixed layer front in thermal wind balance.\n"//&
+             " \t jet - an asymmetric zonal jet.\n"//&
              " \t USER - call a user modified routine.", &
              default="uniform", do_not_log=just_read)
     select case (trim(config))
@@ -338,6 +340,7 @@ subroutine MOM_initialize_state(u, v, h, tv, Time, G, GV, US, PF, dirs, &
                                   just_read=just_read)
       case ("rossby_front"); call Rossby_front_initialize_thickness(h, G, GV, US, &
                                       PF, just_read=just_read)
+      case ("jet"); call jet_initialize_thickness(h, G, GV, PF, just_read=just_read)
       case ("USER"); call user_initialize_thickness(h, G, GV, PF, &
                               just_read=just_read)
       case default ; call MOM_error(FATAL,  "MOM_initialize_state: "//&
@@ -439,6 +442,7 @@ subroutine MOM_initialize_state(u, v, h, tv, Time, G, GV, US, PF, dirs, &
        " \t uniform - the flow is uniform (determined by\n"//&
        " \t\t parameters INITIAL_U_CONST and INITIAL_V_CONST).\n"//&
        " \t rossby_front - a mixed layer front in thermal wind balance.\n"//&
+       " \t jet - Asymmetric zonal jet.\n"//&
        " \t soliton - Equatorial Rossby soliton.\n"//&
        " \t USER - call a user modified routine.", default="zero", &
        do_not_log=just_read)
@@ -455,6 +459,7 @@ subroutine MOM_initialize_state(u, v, h, tv, Time, G, GV, US, PF, dirs, &
                                  just_read=just_read)
     case ("rossby_front"); call Rossby_front_initialize_velocity(u, v, h, &
                                      G, GV, US, PF, just_read=just_read)
+    case ("jet"); call jet_initialize_velocity(u, v, G, GV, US, PF, just_read=just_read)
     case ("soliton"); call soliton_initialize_velocity(u, v, h, G, GV, US)
     case ("USER"); call user_initialize_velocity(u, v, G, GV, US, PF, &
                              just_read=just_read)
