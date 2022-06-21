@@ -3,6 +3,7 @@ module jet_initialization
 
 ! This file is part of MOM6. See LICENSE.md for the license.
 
+use MOM_coms,          only : sum_across_PEs, PE_here
 use MOM_error_handler, only : MOM_mesg, MOM_error, FATAL, WARNING, is_root_pe
 use MOM_dyn_horgrid, only : dyn_horgrid_type
 use MOM_file_parser, only : get_param, log_version, param_file_type
@@ -34,9 +35,10 @@ public jet_initialize_thickness, jet_initialize_velocity, jet_set_OBC_data
 !> A module variable that should not be used.
 !! \todo Move this module variable into a control structure.
 logical :: first_call = .true.
+logical :: jet_CS_initialized = .false.
 
 !> Control structure for jet properties.
-type, public :: jet_CS ; private
+type, public :: jet_CS_type ; private
   real :: f_0                   !! Coriolis parameter [T-1 ~> s-1]
   real :: delta                 !! asymmetry parameter
   real :: F                     !! Inverse Burger number
@@ -45,50 +47,99 @@ type, public :: jet_CS ; private
   real :: H1                    !! Upper layer depth at jet axis [L ~> m]
   real :: H                     !! Total depth [L ~> m]
   real :: U0                    !! Maximum velocity at jet axis [L S-1 ~> m s-1]
-end type jet_CS
+  real :: trans                 !! total transport [L^3 S-1 ~> m s-1]
+end type jet_CS_type
 
+type(jet_CS_type) jet_CS
 
 contains
 
 !> Get parameters
-subroutine jet_get_parameters(param_file, GV, CS)
+subroutine jet_get_parameters(param_file, G, GV)
   type(param_file_type),   intent(in)  :: param_file !< A structure indicating the open
                                              !! file to parse for model parameter values.
+  type(ocean_grid_type),   intent(in) :: G  !< The ocean's grid structure.
   type(verticalGrid_type), intent(in)  :: GV !< The ocean's vertical grid structure.
-  type(jet_CS), intent(out) :: CS            !! Jet control structure
+  integer :: i, j, k, n, is, ie, js, je, isd, ied, jsd, jed, nz
+  integer :: IsdB, IedB, JsdB, JedB
   real :: km2m = 1000.0
+  real :: f_0, L, delta, Ro, F, H1, U0, trans, y
+  character(len=256) :: mesg    ! Message for error messages.
     
-  call get_param(param_file, "MOM_shared_initialization", "F_0", CS%f_0, &
+  if (jet_CS_initialized) return
+  jet_CS_initialized = .true.
+    
+  is = G%isc ; ie = G%iec ; js = G%jsc ; je = G%jec ; nz = GV%ke
+  isd = G%isd ; ied = G%ied ; jsd = G%jsd ; jed = G%jed
+  IsdB = G%IsdB ; IedB = G%IedB ; JsdB = G%JsdB ; JedB = G%JedB
+  
+    
+  call get_param(param_file, "MOM_shared_initialization", "F_0", f_0, &
                  "The reference value of the Coriolis parameter with the "//&
                  "betaplane option.", units="s-1", default=0.0)
-  call get_param(param_file, mdl,"JET_L", CS%L, &
+  call get_param(param_file, mdl,"JET_L", L, &
                  "Jet length scale.",&
                  units="km", default=31.0)
-  call get_param(param_file, mdl, "JET_DELTA", CS%delta, &
+  call get_param(param_file, mdl, "JET_DELTA", delta, &
                  "Jet asymmetry parameter.",  &
                  units="nondim", default=0.3)
-  call get_param(param_file, mdl, "JET_ROSSBY", CS%Ro, &
+  call get_param(param_file, mdl, "JET_ROSSBY", Ro, &
                  "Jet Rossby number.",  &
                  units="nondim", default=0.6)
-  call get_param(param_file, mdl, "JET_F", CS%F, &
+  call get_param(param_file, mdl, "JET_F", F, &
                  "Jet inverse Burger number.",  &
                  units="nondim", default=1.0989)
                  
-  CS%H1 = (CS%f_0 * CS%L*km2m)**2/(CS%F * GV%g_prime(2))
-  CS%U0 = CS%f_0 * CS%L * km2m * CS%Ro
+  H1 = (f_0 * L*km2m)**2/(F * GV%g_prime(2))
+  U0 = f_0 * L * km2m * Ro
+  
+  jet_CS%f_0   = f_0
+  jet_CS%L     = L
+  jet_CS%delta = delta
+  jet_CS%Ro    = Ro
+  jet_CS%F     = F
+  jet_CS%H1    = H1
+  jet_CS%U0    = U0
+  
+  ! Get the total transport by the jet
+  I = G%iscB
+  k = 1
+  trans = 0.0
+  ! Only once along the western boundary 
+  ! I feel like there should be an easier way to do this. 
+  if (G%geoLonCu(G%iscB, G%isc) == G%west_lon) then    
+    do j=js,je
+      y = G%geoLatT(I,j)
+      
+      trans = trans + jet_thickness(y, k, G, GV)*jet_uvel(y, k)*G%dy_Cu(is, j)
+!        print '("PE: ", I3, "   west_lon:", F10.4, "   geoLonCu", F10.4,"   transport = ", F10.1)', &
+!              pe_here(), G%west_lon, G%geoLonCu(G%iscB, 1), trans/1.0e6    
+    enddo
+  endif
+  
+  call sum_across_PEs(trans)
+
+  jet_CS%trans = trans
+  print '("PE: ", I3, "   transport = ", F16.1, " Sv,   uvel = ", F10.5)', &
+        pe_here(), trans/1.0e6, jet_CS%trans/G%len_lat/km2m/G%max_depth
+!   call MOM_mesg(trim(mesg), verb=4, all_print=.true.)
 
 end subroutine jet_get_parameters
 
 !> Calculate jet velocity
-function jet_uvel(y, k, CS)
+function jet_uvel(y, k)
   real, intent(in)         :: y         !! latitude (in km)
   integer, intent(in)      :: k         !! Vertical level
-  type(jet_CS), intent(in) :: CS        !! Jet control structure
   
+  real :: L, delta, U0
   real :: jet_uvel
   
+  U0    = jet_CS%U0
+  L     = jet_CS%L
+  delta = jet_CS%delta
+  
   if (k == 1) then
-    jet_uvel = CS%U0*exp(-abs(y)/(CS%L*(1.0 - sign(CS%delta, y))))
+    jet_uvel = U0*exp(-abs(y)/(L*(1.0 - sign(delta, y))))
   else
     jet_uvel = 0
   endif
@@ -97,37 +148,49 @@ end function jet_uvel
 
 
 !> Calculate jet thickness
-function jet_thickness(y, k, G, GV, CS)
+function jet_thickness(y, k, G, GV)
   real,                    intent(in) :: y  !! latitude (in km)
   integer,                 intent(in) :: k  !! Vertical level
   type(ocean_grid_type),   intent(in) :: G  !< The ocean's grid structure.
   type(verticalGrid_type), intent(in) :: GV !< The ocean's vertical grid structure.
-  type(jet_CS),            intent(in) :: CS !! Jet control structure
   
+  real :: L, delta, Ro, F, H1
   real :: jet_thickness
   
+  H1    = jet_CS%H1
+  F     = jet_CS%F
+  Ro    = jet_CS%Ro
+  delta = jet_CS%delta
+  L     = jet_CS%L
+ 
   if (k == 1) then
-    jet_thickness = CS%H1 - (1.0 + GV%g_prime(2)/GV%g_prime(1)) * CS%H1 * CS%F * CS%Ro &
-                    * (sign(1.0,y) - CS%delta) &
-                    * (1.0 - exp(-abs(y)/(CS%L * (1.0 - sign(CS%delta, y)))))
+    jet_thickness = H1 - (1.0 + GV%g_prime(2)/GV%g_prime(1)) * H1 * F * Ro &
+                    * (sign(1.0,y) - delta) &
+                    * (1.0 - exp(-abs(y)/(L * (1.0 - sign(delta, y)))))
   elseif (k == 2) then
-    jet_thickness = G%max_depth - CS%H1 + CS%H1 * CS%F * CS%Ro &
-                    * (sign(1.0,y) - CS%delta) &
-                    * (1.0 - exp(-abs(y)/(CS%L * (1.0 - sign(CS%delta, y)))))
+    jet_thickness = G%max_depth - H1 + H1 * F * Ro &
+                    * (sign(1.0,y) - delta) &
+                    * (1.0 - exp(-abs(y)/(L * (1.0 - sign(delta, y)))))
   endif
 end function jet_thickness
 
 !> Calculate jet eta
-function jet_eta(y, GV, CS)
+function jet_eta(y, GV)
   real,                    intent(in) :: y  !! latitude (in km)
   type(verticalGrid_type), intent(in) :: GV !< The ocean's vertical grid structure.
-  type(jet_CS),            intent(in) :: CS !! Jet control structure
   
+  real :: L, delta, Ro, F, H1
   real :: jet_eta
   
-  jet_eta = - GV%g_prime(2)/GV%g_prime(1) * CS%H1 * CS%F * CS%Ro &
-                    * (sign(1.0,y) - CS%delta) &
-                    * (1.0 - exp(-abs(y)/(CS%L * (1.0 - sign(CS%delta, y)))))
+  H1    = jet_CS%H1
+  F     = jet_CS%F
+  Ro    = jet_CS%Ro
+  delta = jet_CS%delta
+  L     = jet_CS%L
+  
+  jet_eta = - GV%g_prime(2)/GV%g_prime(1) * H1 * F * Ro &
+                    * (sign(1.0,y) - delta) &
+                    * (1.0 - exp(-abs(y)/(L * (1.0 - sign(delta, y)))))
 end function jet_eta
 
 
@@ -143,7 +206,6 @@ subroutine jet_initialize_thickness(h, G, GV, param_file, just_read)
   logical,                 intent(in)  :: just_read !< If true, this call will
                                              !! only read parameters without changing h.
 
-  type(jet_CS) :: CS        !! Jet control structure
   real    :: y
   integer :: i, j, k, is, ie, js, je, nz
 
@@ -151,7 +213,7 @@ subroutine jet_initialize_thickness(h, G, GV, param_file, just_read)
   
   if (just_read) return ! All run-time parameters have been read, so return.
 
-  call jet_get_parameters(param_file, GV, CS)
+  call jet_get_parameters(param_file, G, GV)
 
   h(:,:,:) = 0
 
@@ -159,9 +221,7 @@ subroutine jet_initialize_thickness(h, G, GV, param_file, just_read)
     do j=js,je ; do i=is,ie
       y = G%geoLatT(I,j)
     
-!     print *, 'sign(1.0, y) is ', sign(1.0,y), 'for y = ', y
-
-      h(i,j,k) = jet_thickness(y, k, G, GV, CS)
+      h(i,j,k) = jet_thickness(y, k, G, GV)
     enddo ; enddo
   enddo
   
@@ -183,7 +243,6 @@ subroutine jet_initialize_velocity(u, v, G, GV, US, param_file, just_read)
   logical,                                     intent(in)  :: just_read !< If true, this call will
                                                       !! only read parameters without changing u & v.
 
-  type(jet_CS) :: CS        !! Jet control structure
   integer :: i, j, k, n, is, ie, js, je, nz
   real    :: y
 
@@ -191,17 +250,16 @@ subroutine jet_initialize_velocity(u, v, G, GV, US, param_file, just_read)
 
   is = G%isc ; ie = G%iec ; js = G%jsc ; je = G%jec ; nz = GV%ke
 
-  
   u(:,:,:) = 0.0
   v(:,:,:) = 0.0
 
   if (first_call) call write_user_log(param_file)
 
-  call jet_get_parameters(param_file, GV, CS)
+  call jet_get_parameters(param_file, G, GV)
 
   do j = js,je ; do I = is-1,ie+1
     y = G%geoLatCu(I,j)
-    u(I,j,1) = jet_uvel(y, 1, CS)
+    u(I,j,1) = jet_uvel(y, 1)
   enddo ; enddo
   
 end subroutine jet_initialize_velocity
@@ -222,8 +280,8 @@ subroutine jet_set_OBC_data(OBC, G, GV, US, param_file)
   integer :: i, j, k, n, is, ie, js, je, isd, ied, jsd, jed, nz
   integer :: IsdB, IedB, JsdB, JedB
   type(OBC_segment_type), pointer :: segment => NULL()
-  type(jet_CS) :: CS        !! Jet control structure
   real    :: y, uvel, h
+  real    :: km2m = 1000.0
   character(len=256) :: mesg    ! Message for error messages.
 
   if (first_call) call write_user_log(param_file)
@@ -235,7 +293,7 @@ subroutine jet_set_OBC_data(OBC, G, GV, US, param_file)
   if (.not.associated(OBC)) call MOM_error(FATAL, 'jet_initialization.F90: '// &
         'jet_initialization() was called but OBC type was not initialized!')
         
-  call jet_get_parameters(param_file, GV, CS)
+  call jet_get_parameters(param_file, G, GV)
   
   do n=1,OBC%number_of_segments
     segment => OBC%segment(n)
@@ -250,38 +308,48 @@ subroutine jet_set_OBC_data(OBC, G, GV, US, param_file)
           do j=jsd,jed ; do I=IsdB,IedB
             y = G%geoLatCu(I,j)
         
-            uvel = jet_uvel(y, k, CS)
-            h = jet_thickness(y, k, G, GV, CS)
+            uvel = jet_uvel(y, k)
+            h = jet_thickness(y, k, G, GV)
             
             if (segment%nudged) then
                 segment%nudged_normal_vel(I,j,k) = uvel
             else
                 segment%normal_vel(I,j,k) = uvel
+                !! I'm pretty sure this value is not used
                 segment%normal_trans(I,j,k) = h*uvel*G%dy_Cu(I, j)
             endif
         
             !! Things that just need to be set once
             if (k == 1) then 
               segment%normal_vel_bt(I,j) = h*uvel/G%max_depth
+              segment%eta(I,j) = jet_eta(y, GV)
           
-              segment%eta(I,j) = jet_eta(y, GV, CS)
-          
-    !           write(mesg, '("(i,j): ", I4, "," I4, " y: ", F8.1, " normal_vel: ", F10.4, ' &
-    !                     // '" normal_trans: ", F16.1, " normal_vel_bt: ", F12.6)') &
-    !                     i, j, y, segment%normal_vel(I,j,k), segment%normal_trans(I,j,k), segment%normal_vel_bt(I,j)
-    !           call MOM_mesg(trim(mesg), verb=5, all_print=.true.)
+!               write(mesg, '("(i,j): ", I4, "," I4, " y: ", F8.1, " normal_vel: ", F10.4, ' &
+!                         // '" normal_trans: ", F16.1, " normal_vel_bt: ", F12.6)') &
+!                         i, j, y, segment%normal_vel(I,j,k), segment%normal_trans(I,j,k), segment%normal_vel_bt(I,j)
+!               call MOM_mesg(trim(mesg), verb=5, all_print=.true.)
             endif
           enddo ; enddo
         enddo
       elseif (segment%direction == OBC_DIRECTION_E) then
-        cycle
+        uvel = jet_CS%trans/G%len_lat/km2m/G%max_depth
+        
+        IsdB = segment%HI%IsdB ; IedB = segment%HI%IedB
+        jsd = segment%HI%jsd ; jed = segment%HI%jed
+        do j=jsd,jed ; do I=IsdB,IedB
+          y = G%geoLatCu(I,j)
+          segment%normal_vel_bt(I,j) = uvel
+          !! geostrophically balanced outflow
+          segment%eta(I,j) = -jet_CS%F_0*uvel*y*km2m/GV%g_prime(1)
+        enddo; enddo
       else 
         !! Must be the north or the south
         is = segment%HI%isd ; ie = segment%HI%ied
         Js = segment%HI%JsdB ; Je = segment%HI%JedB
         do J=Js,Je; do i=is,ie
           y = G%geoLatCv(i,J)
-          segment%eta(I,J) = jet_eta(y, GV, CS)
+          segment%eta(i,J) = jet_eta(y, GV)
+          segment%normal_vel_bt(i,J) = 0.0
         enddo ; enddo
       endif
   enddo
